@@ -1,28 +1,30 @@
 package main
 
 import (
+	"context"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+
+	// Internals
+
+	"github.com/paolojulian/wedding-be/internal/auth"
+	"github.com/paolojulian/wedding-be/internal/models"
+	"github.com/paolojulian/wedding-be/internal/utils"
+
+	firebase "firebase.google.com/go"
+	"google.golang.org/api/option"
 )
 
-type invitation struct {
-	ID            string `json:"id"`
-	VoucherCode   string `json:"voucher_code"`
-	Name          string `json:"name"`
-	Status        string `json:"status"`
-	GuestsAllowed int    `json:"guests_allowed"`
-	GuestsToBring *int   `json:"guests_to_bring"`
-}
-
-var invitations = []invitation{
+var invitations = []models.Invitation{
 	{
 		ID:            "1",
 		VoucherCode:   "123456",
 		Name:          "John Doe",
 		Status:        "going",
 		GuestsAllowed: 2,
-		GuestsToBring: intPtr(1),
+		GuestsToBring: models.IntPtr(1),
 	},
 	{
 		ID:            "2",
@@ -34,12 +36,26 @@ var invitations = []invitation{
 	},
 }
 
-func intPtr(i int) *int {
-	return &i
-}
-
 func main() {
+
 	router := gin.Default()
+
+	// Initialize Firebase Service account
+	ctx := context.Background()
+	serviceAccount := option.WithCredentialsFile("serviceAccountKey.json")
+	app, err := firebase.NewApp(ctx, nil, serviceAccount)
+	if err != nil {
+		log.Fatalf("Error initializing Firebase app: %v\n", err)
+		return
+	}
+
+	client, err := app.Firestore(ctx)
+	if err != nil {
+		log.Fatalf("Error getting firebase client: %v\n", err)
+		return
+	}
+	defer client.Close()
+
 	// Allow CORS from localhost
 	router.Use(func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
@@ -53,15 +69,15 @@ func main() {
 		c.Next()
 	})
 
-	router.GET("/invitations", authMiddleware(), getInvitations)
-	router.POST("/invitations", authMiddleware(), postInvitation)
-	router.PUT("/invitations/:id", authMiddleware(), editInvitation)
-	router.PUT("/invitations/respond/:voucherCode", authMiddleware(), respondToInvitation)
+	router.GET("/invitations", utils.AuthMiddleware(), getInvitations)
+	router.POST("/invitations", utils.AuthMiddleware(), postInvitation)
+	router.PUT("/invitations/:id", utils.AuthMiddleware(), editInvitation)
+	router.PUT("/invitations/respond/:voucherCode", utils.AuthMiddleware(), respondToInvitation)
 
 	// Authentication endpoints
-	router.GET("/me", authMiddleware(), checkMe)
-	router.POST("/login", login)
-	router.POST("/logout", logout)
+	router.GET("/me", utils.AuthMiddleware(), auth.ValidateLoggedInUser)
+	router.POST("/login", auth.Login)
+	router.POST("/logout", auth.Logout)
 
 	router.Run("localhost:8080")
 }
@@ -71,7 +87,7 @@ func getInvitations(c *gin.Context) {
 }
 
 func postInvitation(c *gin.Context) {
-	var newInvitation invitation
+	var newInvitation models.Invitation
 
 	if err := c.BindJSON(&newInvitation); err != nil {
 		return
@@ -85,7 +101,7 @@ func editInvitation(c *gin.Context) {
 	id := c.Param("id")
 
 	// If found, update the invitation
-	var updatedInvitation invitation
+	var updatedInvitation models.Invitation
 	if err := c.BindJSON(&updatedInvitation); err != nil {
 		return
 	}
@@ -110,7 +126,7 @@ func editInvitation(c *gin.Context) {
 func respondToInvitation(c *gin.Context) {
 	voucherCode := c.Param("voucherCode")
 
-	var updatedInvitation invitation
+	var updatedInvitation models.Invitation
 	if err := c.BindJSON(&updatedInvitation); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Invalid request"})
 		return
@@ -130,62 +146,4 @@ func respondToInvitation(c *gin.Context) {
 	}
 
 	c.IndentedJSON(http.StatusOK, updatedInvitation)
-}
-
-func login(c *gin.Context) {
-	var credentials struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
-	}
-
-	if err := c.BindJSON(&credentials); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Invalid request"})
-		return
-	}
-
-	// Validate the credentials
-	if credentials.Username != "admin" || credentials.Password != "qwe123" {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Invalid credentials"})
-		return
-	}
-
-	setCookieHandler(c.Writer, "authTokenSampleqwerty")
-	c.IndentedJSON(http.StatusOK, gin.H{"message": "Logged in successfully"})
-}
-
-func authMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		_, err := c.Request.Cookie("auth_token")
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
-			c.Abort()
-			return
-		}
-		// TODO: Validate cookie
-		c.Next()
-	}
-}
-
-func setCookieHandler(w http.ResponseWriter, cookieValue string) {
-	cookie := http.Cookie{
-		Name:     "auth_token",
-		Value:    cookieValue,
-		Path:     "/",
-		MaxAge:   3600,
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
-	}
-	http.SetCookie(w, &cookie)
-}
-
-func logout(c *gin.Context) {
-	// Clear the auth token cookie
-	c.SetCookie("auth_token", "", -1, "/", "", false, true)
-	c.IndentedJSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
-}
-
-func checkMe(c *gin.Context) {
-	// If the user is logged in, return the user details
-	c.IndentedJSON(http.StatusOK, gin.H{"username": "admin"})
 }
