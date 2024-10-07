@@ -1,8 +1,6 @@
 package main
 
 import (
-	"context"
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -10,21 +8,20 @@ import (
 	// Internals
 
 	"github.com/paolojulian/wedding-be/internal/auth"
+	"github.com/paolojulian/wedding-be/internal/firebase"
+	"github.com/paolojulian/wedding-be/internal/invitations"
 	"github.com/paolojulian/wedding-be/internal/models"
 	"github.com/paolojulian/wedding-be/internal/utils"
-
-	firebase "firebase.google.com/go"
-	"google.golang.org/api/option"
 )
 
-var invitations = []models.Invitation{
+var invitationArr = []models.Invitation{
 	{
 		ID:            "1",
 		VoucherCode:   "123456",
 		Name:          "John Doe",
 		Status:        "going",
 		GuestsAllowed: 2,
-		GuestsToBring: models.IntPtr(1),
+		GuestsToBring: 0,
 	},
 	{
 		ID:            "2",
@@ -32,7 +29,7 @@ var invitations = []models.Invitation{
 		Name:          "Paolo Vincent Julian",
 		Status:        "pending",
 		GuestsAllowed: 1,
-		GuestsToBring: nil,
+		GuestsToBring: 0,
 	},
 }
 
@@ -40,21 +37,8 @@ func main() {
 
 	router := gin.Default()
 
-	// Initialize Firebase Service account
-	ctx := context.Background()
-	serviceAccount := option.WithCredentialsFile("serviceAccountKey.json")
-	app, err := firebase.NewApp(ctx, nil, serviceAccount)
-	if err != nil {
-		log.Fatalf("Error initializing Firebase app: %v\n", err)
-		return
-	}
-
-	client, err := app.Firestore(ctx)
-	if err != nil {
-		log.Fatalf("Error getting firebase client: %v\n", err)
-		return
-	}
-	defer client.Close()
+	firebase.InitFirebase()
+	firebase.InitFirestore()
 
 	// Allow CORS from localhost
 	router.Use(func(c *gin.Context) {
@@ -69,7 +53,7 @@ func main() {
 		c.Next()
 	})
 
-	router.GET("/invitations", utils.AuthMiddleware(), getInvitations)
+	router.GET("/invitations", utils.AuthMiddleware(), invitations.GetList)
 	router.POST("/invitations", utils.AuthMiddleware(), postInvitation)
 	router.PUT("/invitations/:id", utils.AuthMiddleware(), editInvitation)
 	router.PUT("/invitations/respond/:voucherCode", utils.AuthMiddleware(), respondToInvitation)
@@ -82,10 +66,6 @@ func main() {
 	router.Run("localhost:8080")
 }
 
-func getInvitations(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, invitations)
-}
-
 func postInvitation(c *gin.Context) {
 	var newInvitation models.Invitation
 
@@ -93,7 +73,7 @@ func postInvitation(c *gin.Context) {
 		return
 	}
 
-	invitations = append(invitations, newInvitation)
+	invitationArr = append(invitationArr, newInvitation)
 	c.IndentedJSON(http.StatusCreated, newInvitation)
 }
 
@@ -107,9 +87,9 @@ func editInvitation(c *gin.Context) {
 	}
 
 	// Update the invitation details
-	for i, invitation := range invitations {
+	for i, invitation := range invitationArr {
 		if invitation.ID == id {
-			invitations[i] = updatedInvitation
+			invitationArr[i] = updatedInvitation
 			break
 		}
 	}
@@ -132,10 +112,10 @@ func respondToInvitation(c *gin.Context) {
 		return
 	}
 
-	for i, invitation := range invitations {
+	for i, invitation := range invitationArr {
 		if invitation.VoucherCode == voucherCode {
-			invitations[i].GuestsToBring = updatedInvitation.GuestsToBring
-			invitations[i].Status = updatedInvitation.Status
+			invitationArr[i].GuestsToBring = updatedInvitation.GuestsToBring
+			invitationArr[i].Status = updatedInvitation.Status
 			break
 		}
 	}

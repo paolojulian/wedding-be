@@ -1,9 +1,12 @@
 package auth
 
 import (
+	"context"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/paolojulian/wedding-be/internal/firebase"
 )
 
 func Login(c *gin.Context) {
@@ -18,8 +21,25 @@ func Login(c *gin.Context) {
 	}
 
 	// Validate the credentials
-	if credentials.Username != "admin" || credentials.Password != "qwe123" {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Invalid credentials"})
+	usersCollection := firebase.FirestoreClient.Collection("users")
+	doc, err := usersCollection.Doc("1").Get(context.Background())
+	if err != nil {
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": "Invalid credentials"})
+		return
+	}
+
+	var user struct {
+		Password string `firestore:"password"`
+	}
+
+	if err := doc.DataTo(&user); err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Error processing user data"})
+		return
+	}
+
+	if user.Password != credentials.Password {
+		log.Default().Println("Password entered: ", credentials, "Password in DB: ", user.Password)
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": "Invalid credentials"})
 		return
 	}
 
