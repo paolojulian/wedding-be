@@ -1,12 +1,10 @@
 package auth
 
 import (
-	"context"
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/paolojulian/wedding-be/internal/firebase"
+	"github.com/paolojulian/wedding-be/internal/database"
 )
 
 func Login(c *gin.Context) {
@@ -21,25 +19,27 @@ func Login(c *gin.Context) {
 	}
 
 	// Validate the credentials
-	usersCollection := firebase.FirestoreClient.Collection("users")
-	doc, err := usersCollection.Doc("1").Get(context.Background())
+	users, err := database.ReadUsers()
 	if err != nil {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": "Invalid credentials"})
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": err})
 		return
 	}
 
-	var user struct {
-		Password string `firestore:"password"`
-	}
-
-	if err := doc.DataTo(&user); err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Error processing user data"})
+	if len(users) == 0 {
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": "No users"})
 		return
 	}
 
-	if user.Password != credentials.Password {
-		log.Default().Println("Password entered: ", credentials, "Password in DB: ", user.Password)
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": "Invalid credentials"})
+	var hasMatch bool = false
+	for _, user := range users {
+		if user.Username == credentials.Username && user.Password == credentials.Password {
+			hasMatch = true
+			break
+		}
+	}
+
+	if !hasMatch {
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": "Invalid password"})
 		return
 	}
 
