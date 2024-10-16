@@ -42,7 +42,7 @@ func ReadUsers() ([]models.User, error) {
 	return database.Users, nil
 }
 
-func getDatabsePath() (string, error) {
+func getDatabasePath() (string, error) {
 	currentDir, err := os.Getwd()
 	if err != nil {
 		return "", err
@@ -53,7 +53,7 @@ func getDatabsePath() (string, error) {
 }
 
 func readDatabase() (*os.File, error) {
-	dbPath, err := getDatabsePath()
+	dbPath, err := getDatabasePath()
 	if err != nil {
 		return nil, err
 	}

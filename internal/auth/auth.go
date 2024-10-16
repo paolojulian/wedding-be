@@ -18,7 +18,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// Validate the credentials
+	// Get the users from the database
 	users, err := database.ReadUsers()
 	if err != nil {
 		c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": err})
@@ -30,6 +30,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
+	// Validate the credentials
 	var hasMatch bool = false
 	for _, user := range users {
 		if user.Username == credentials.Username && user.Password == credentials.Password {

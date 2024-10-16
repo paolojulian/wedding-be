@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/paolojulian/wedding-be/internal/database"
+	"github.com/paolojulian/wedding-be/internal/models"
 )
 
 func GetList(c *gin.Context) {
@@ -16,6 +17,13 @@ func GetList(c *gin.Context) {
 
 	c.JSON(http.StatusOK, invitations)
 }
-func RespondToInvitation() {}
-func CreateInvitation()    {}
-func EditInvitation()      {}
+func RespondToInvitation(c *gin.Context) {
+	var newInvitation models.Invitation
+
+	if err := c.BindJSON(&newInvitation); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request"})
+		return
+	}
+}
+func CreateInvitation() {}
+func EditInvitation()   {}
