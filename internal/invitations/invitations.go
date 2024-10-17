@@ -5,9 +5,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/paolojulian/wedding-be/internal/firebase"
 	"github.com/paolojulian/wedding-be/internal/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -36,6 +36,49 @@ func (s *InvitationService) GetList(c context.Context) ([]models.Invitation, err
 	return invitations, nil
 }
 
+func (s *InvitationService) CreateInvitation(c context.Context, invitation models.Invitation) (*models.Invitation, error) {
+	// Validate required fields
+	if invitation.Name == "" {
+		return nil, ErrNameIsRequired
+	}
+
+	// Voucher code will be generated on the front-end side
+	if invitation.VoucherCode == "" {
+		return nil, ErrVoucherCodeIsRequired
+	}
+
+	// Set default values
+	invitation.Status = "pending" // default status
+	invitation.Index = 1
+
+	result, err := s.collection.InsertOne(c, invitation)
+	if err != nil {
+		return nil, err
+	}
+
+	invitation.ID = result.InsertedID.(primitive.ObjectID).Hex()
+
+	return &invitation, nil
+}
+
+func (s *InvitationService) DeleteInvitation(c context.Context, ID string) error {
+	objID, err := primitive.ObjectIDFromHex(ID)
+	if err != nil {
+		return ErrInvalidIDFormat
+	}
+
+	result, err := s.collection.DeleteOne(c, bson.M{"_id": objID})
+	if err != nil {
+		return err
+	}
+
+	if result.DeletedCount == 0 {
+		return nil
+	}
+
+	return nil
+}
+
 func RespondToInvitation(c *gin.Context) {
 	var newInvitation models.Invitation
 
@@ -43,29 +86,5 @@ func RespondToInvitation(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request"})
 		return
 	}
-}
-func CreateInvitation(c *gin.Context) {
-	var newInvitation models.Invitation
-
-	if err := c.BindJSON(&newInvitation); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request, check your form values"})
-		return
-	}
-
-	_, _, err := firebase.FirestoreClient.Collection("invitations").Add(context.Background(), map[string]interface{}{
-		"id":              newInvitation.ID,
-		"index":           newInvitation.Index,
-		"voucher_code":    newInvitation.VoucherCode,
-		"name":            newInvitation.Name,
-		"status":          newInvitation.Status,
-		"guests_allowed":  newInvitation.GuestsAllowed,
-		"guests_to_bring": newInvitation.GuestsToBring,
-	})
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "Error creating invitation"})
-		return
-	}
-
-	c.IndentedJSON(http.StatusCreated, newInvitation)
 }
 func EditInvitation() {}
