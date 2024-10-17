@@ -55,7 +55,15 @@ func CreateInvitation(c *gin.Context) {
 		return
 	}
 
-	_, _, err := firebase.FirestoreClient.Collection("invitations").Add(context.Background(), newInvitation)
+	_, _, err := firebase.FirestoreClient.Collection("invitations").Add(context.Background(), map[string]interface{}{
+		"id":              newInvitation.ID,
+		"index":           newInvitation.Index,
+		"voucher_code":    newInvitation.VoucherCode,
+		"name":            newInvitation.Name,
+		"status":          newInvitation.Status,
+		"guests_allowed":  newInvitation.GuestsAllowed,
+		"guests_to_bring": newInvitation.GuestsToBring,
+	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Error creating invitation"})
 		return

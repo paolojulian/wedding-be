@@ -12,6 +12,7 @@ import (
 	"github.com/paolojulian/wedding-be/internal/invitations"
 	"github.com/paolojulian/wedding-be/internal/models"
 	"github.com/paolojulian/wedding-be/internal/utils"
+	"github.com/paolojulian/wedding-be/pkg/db"
 )
 
 var invitationArr = []models.Invitation{
@@ -34,8 +35,14 @@ var invitationArr = []models.Invitation{
 }
 
 func main() {
-
 	router := gin.Default()
+
+	client := db.ConnectMongoDB()
+	defer db.DisconnectMongoDB()
+
+	// Initialize the services
+	authService := auth.NewAuthService(client.Database("wedding_db"))
+	authHandler := auth.NewHandler(authService)
 
 	firebase.InitFirebase()
 	firebase.InitFirestore()
@@ -53,6 +60,7 @@ func main() {
 		c.Next()
 	})
 
+	// Invitation endpoints
 	router.GET("/invitations", utils.AuthMiddleware(), invitations.GetList)
 	router.GET("/test/invitations", invitations.GetList)
 	router.POST("/invitations", utils.AuthMiddleware(), invitations.CreateInvitation)
@@ -60,23 +68,12 @@ func main() {
 	router.PUT("/invitations/respond/:voucherCode", utils.AuthMiddleware(), respondToInvitation)
 
 	// Authentication endpoints
-	router.GET("/me", utils.AuthMiddleware(), auth.ValidateLoggedInUser)
-	router.POST("/login", auth.Login)
-	router.POST("/logout", auth.Logout)
+	router.GET("/me", utils.AuthMiddleware(), authHandler.ValidateLoggedInUser)
+	router.POST("/login", authHandler.Login)
+	router.POST("/logout", authHandler.Logout)
 
 	router.Run("0.0.0.0:8080")
 }
-
-// func postInvitation(c *gin.Context) {
-// 	var newInvitation models.Invitation
-
-// 	if err := c.BindJSON(&newInvitation); err != nil {
-// 		return
-// 	}
-
-// 	invitationArr = append(invitationArr, newInvitation)
-// 	c.IndentedJSON(http.StatusCreated, newInvitation)
-// }
 
 func editInvitation(c *gin.Context) {
 	id := c.Param("id")

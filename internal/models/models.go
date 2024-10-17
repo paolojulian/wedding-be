@@ -8,7 +8,7 @@ type Database struct {
 }
 
 type Invitation struct {
-	ID string `json:"id"`
+	ID string `json:"_id"`
 	// This is the index to determine the position of the invitation in the list
 	Index         int    `json:"index"`
 	VoucherCode   string `json:"voucher_code"`
@@ -19,7 +19,7 @@ type Invitation struct {
 }
 
 type User struct {
-	ID       int    `json:"id"`
+	ID       string `json:"_id"`
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
