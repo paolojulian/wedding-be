@@ -18,6 +18,8 @@ func ConnectMongoDB() *mongo.Client {
 		return client
 	}
 
+	fmt.Println("Connecting to MongoDB Atlas...")
+
 	// If not, create one
 
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)

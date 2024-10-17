@@ -43,6 +43,8 @@ func main() {
 	// Initialize the services
 	authService := auth.NewAuthService(client.Database("wedding_db"))
 	authHandler := auth.NewHandler(authService)
+	invitationService := invitations.NewInvitationService(client.Database("wedding_db"))
+	invitationHandler := invitations.NewHandler(invitationService)
 
 	firebase.InitFirebase()
 	firebase.InitFirestore()
@@ -61,8 +63,8 @@ func main() {
 	})
 
 	// Invitation endpoints
-	router.GET("/invitations", utils.AuthMiddleware(), invitations.GetList)
-	router.GET("/test/invitations", invitations.GetList)
+	router.GET("/invitations", utils.AuthMiddleware(), invitationHandler.GetList)
+	router.GET("/test/invitations", invitationHandler.GetList)
 	router.POST("/invitations", utils.AuthMiddleware(), invitations.CreateInvitation)
 	router.PUT("/invitations/:id", utils.AuthMiddleware(), editInvitation)
 	router.PUT("/invitations/respond/:voucherCode", utils.AuthMiddleware(), respondToInvitation)
