@@ -8,6 +8,7 @@ import (
 	// Internals
 
 	"github.com/paolojulian/wedding-be/internal/auth"
+	"github.com/paolojulian/wedding-be/internal/firebase"
 	"github.com/paolojulian/wedding-be/internal/invitations"
 	"github.com/paolojulian/wedding-be/internal/models"
 	"github.com/paolojulian/wedding-be/internal/utils"
@@ -36,6 +37,9 @@ func main() {
 
 	router := gin.Default()
 
+	firebase.InitFirebase()
+	firebase.InitFirestore()
+
 	// Allow CORS from localhost
 	router.Use(func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
@@ -51,7 +55,7 @@ func main() {
 
 	router.GET("/invitations", utils.AuthMiddleware(), invitations.GetList)
 	router.GET("/test/invitations", invitations.GetList)
-	router.POST("/invitations", utils.AuthMiddleware(), postInvitation)
+	router.POST("/invitations", utils.AuthMiddleware(), invitations.CreateInvitation)
 	router.PUT("/invitations/:id", utils.AuthMiddleware(), editInvitation)
 	router.PUT("/invitations/respond/:voucherCode", utils.AuthMiddleware(), respondToInvitation)
 
@@ -63,16 +67,16 @@ func main() {
 	router.Run("0.0.0.0:8080")
 }
 
-func postInvitation(c *gin.Context) {
-	var newInvitation models.Invitation
+// func postInvitation(c *gin.Context) {
+// 	var newInvitation models.Invitation
 
-	if err := c.BindJSON(&newInvitation); err != nil {
-		return
-	}
+// 	if err := c.BindJSON(&newInvitation); err != nil {
+// 		return
+// 	}
 
-	invitationArr = append(invitationArr, newInvitation)
-	c.IndentedJSON(http.StatusCreated, newInvitation)
-}
+// 	invitationArr = append(invitationArr, newInvitation)
+// 	c.IndentedJSON(http.StatusCreated, newInvitation)
+// }
 
 func editInvitation(c *gin.Context) {
 	id := c.Param("id")
