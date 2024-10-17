@@ -11,6 +11,15 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+type UpdateInvitationRequest struct {
+	Name          *string `json:"name"` // Using pointers to detect if field was provided
+	VoucherCode   *string `json:"voucher_code"`
+	Status        *string `json:"status"`
+	GuestsAllowed *int    `json:"guests_allowed"` // Pointer allows detecting explicit 0
+	GuestsToBring *int    `json:"guests_to_bring"`
+	Index         *int    `json:"index"`
+}
+
 type InvitationService struct {
 	collection *mongo.Collection
 }
@@ -74,6 +83,50 @@ func (s *InvitationService) DeleteInvitation(c context.Context, ID string) error
 
 	if result.DeletedCount == 0 {
 		return nil
+	}
+
+	return nil
+}
+
+func (s *InvitationService) UpdateInvitation(c context.Context, ID string, invitation UpdateInvitationRequest) error {
+	objID, err := primitive.ObjectIDFromHex(ID)
+	if err != nil {
+		return ErrInvalidIDFormat
+	}
+
+	updateDoc := bson.M{}
+
+	if invitation.Name != nil {
+		updateDoc["name"] = invitation.Name
+	}
+
+	if invitation.Status != nil {
+		updateDoc["status"] = invitation.Status
+	}
+
+	if invitation.VoucherCode != nil {
+		updateDoc["voucher_code"] = invitation.VoucherCode
+	}
+
+	if invitation.GuestsAllowed != nil {
+		updateDoc["guests_allowed"] = invitation.GuestsAllowed
+	}
+
+	if invitation.GuestsToBring != nil {
+		updateDoc["guests_to_bring"] = invitation.GuestsToBring
+	}
+
+	if len(updateDoc) == 0 {
+		return ErrNoFieldsToUpdate
+	}
+
+	result, err := s.collection.UpdateOne(c, bson.M{"_id": objID}, bson.M{"$set": updateDoc})
+	if err != nil {
+		return ErrCannotUpdateInDB
+	}
+
+	if result.MatchedCount == 0 {
+		return ErrInvitationNotFound
 	}
 
 	return nil

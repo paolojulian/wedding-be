@@ -75,3 +75,30 @@ func (h *Handler) DeleteInvitation(c *gin.Context) {
 
 	c.JSON(http.StatusNoContent, gin.H{})
 }
+
+func (s *Handler) UpdateInvitation(c *gin.Context) {
+	ID := c.Param("id")
+
+	var req UpdateInvitationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request"})
+		return
+	}
+
+	err := s.Service.UpdateInvitation(c, ID, req)
+	if err != nil {
+		switch err {
+		case ErrInvitationNotFound:
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Invitation not found"})
+		case ErrInvalidIDFormat:
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid ID"})
+		case ErrNoFieldsToUpdate:
+			c.JSON(http.StatusOK, req)
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Unable to update the invitation"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, req)
+}
