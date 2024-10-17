@@ -1,8 +1,6 @@
 package main
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 
 	// Internals
@@ -10,28 +8,8 @@ import (
 	"github.com/paolojulian/wedding-be/internal/auth"
 	"github.com/paolojulian/wedding-be/internal/firebase"
 	"github.com/paolojulian/wedding-be/internal/invitations"
-	"github.com/paolojulian/wedding-be/internal/models"
 	"github.com/paolojulian/wedding-be/pkg/db"
 )
-
-var invitationArr = []models.Invitation{
-	{
-		ID:            "1",
-		VoucherCode:   "123456",
-		Name:          "John Doe",
-		Status:        "going",
-		GuestsAllowed: 2,
-		GuestsToBring: 0,
-	},
-	{
-		ID:            "2",
-		VoucherCode:   "223456",
-		Name:          "Paolo Vincent Julian",
-		Status:        "pending",
-		GuestsAllowed: 1,
-		GuestsToBring: 0,
-	},
-}
 
 func main() {
 	router := gin.Default()
@@ -65,9 +43,10 @@ func main() {
 	router.GET("/invitations", auth.AuthMiddleware(), invitationHandler.GetList)
 	router.GET("/test/invitations", invitationHandler.GetList)
 	router.POST("/invitations", auth.AuthMiddleware(), invitationHandler.CreateInvitation)
-	router.PUT("/invitations/:id", auth.AuthMiddleware(), editInvitation)
+	router.PUT("/invitations/:id", auth.AuthMiddleware(), invitationHandler.UpdateInvitation)
 	router.DELETE("/invitations/:id", auth.AuthMiddleware(), invitationHandler.DeleteInvitation)
-	router.PUT("/invitations/respond/:voucherCode", auth.AuthMiddleware(), respondToInvitation)
+	router.PUT("/invitations/respond/:voucher_code", auth.AuthMiddleware(), invitationHandler.RespondToInvitation)
+	router.GET("/invitations/respond/:voucher_code", auth.AuthMiddleware(), invitationHandler.GetInvitationForRespond)
 
 	// Authentication endpoints
 	router.GET("/me", auth.AuthMiddleware(), authHandler.ValidateLoggedInUser)
@@ -75,55 +54,4 @@ func main() {
 	router.POST("/logout", authHandler.Logout)
 
 	router.Run("0.0.0.0:8080")
-}
-
-func editInvitation(c *gin.Context) {
-	id := c.Param("id")
-
-	// If found, update the invitation
-	var updatedInvitation models.Invitation
-	if err := c.BindJSON(&updatedInvitation); err != nil {
-		return
-	}
-
-	// Update the invitation details
-	for i, invitation := range invitationArr {
-		if invitation.ID == id {
-			invitationArr[i] = updatedInvitation
-			break
-		}
-	}
-
-	// If not found, return 404
-	if updatedInvitation.ID == "" {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Invitation not found"})
-		return
-	}
-
-	c.IndentedJSON(http.StatusOK, updatedInvitation)
-}
-
-func respondToInvitation(c *gin.Context) {
-	voucherCode := c.Param("voucherCode")
-
-	var updatedInvitation models.Invitation
-	if err := c.BindJSON(&updatedInvitation); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Invalid request"})
-		return
-	}
-
-	for i, invitation := range invitationArr {
-		if invitation.VoucherCode == voucherCode {
-			invitationArr[i].GuestsToBring = updatedInvitation.GuestsToBring
-			invitationArr[i].Status = updatedInvitation.Status
-			break
-		}
-	}
-
-	if updatedInvitation.VoucherCode == "" {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Invitation not found"})
-		return
-	}
-
-	c.IndentedJSON(http.StatusOK, updatedInvitation)
 }

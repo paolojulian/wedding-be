@@ -2,9 +2,7 @@ package invitations
 
 import (
 	"context"
-	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"github.com/paolojulian/wedding-be/internal/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -18,6 +16,11 @@ type UpdateInvitationRequest struct {
 	GuestsAllowed *int    `json:"guests_allowed"` // Pointer allows detecting explicit 0
 	GuestsToBring *int    `json:"guests_to_bring"`
 	Index         *int    `json:"index"`
+}
+
+type RespondToInvitationRequest struct {
+	Status        string `json:"status" bindings:"required"`
+	GuestsToBring int    `json:"guests_to_bring" bindings:"required"`
 }
 
 type InvitationService struct {
@@ -132,12 +135,36 @@ func (s *InvitationService) UpdateInvitation(c context.Context, ID string, invit
 	return nil
 }
 
-func RespondToInvitation(c *gin.Context) {
-	var newInvitation models.Invitation
-
-	if err := c.BindJSON(&newInvitation); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request"})
-		return
+func (s *InvitationService) RespondToInvitation(c context.Context, VoucherCode string, respondReq RespondToInvitationRequest) error {
+	filter := bson.M{"voucher_code": VoucherCode}
+	updateDoc := bson.M{
+		"status":          respondReq.Status,
+		"guests_to_bring": respondReq.GuestsToBring,
 	}
+
+	result, err := s.collection.UpdateOne(c, filter, bson.M{"$set": updateDoc})
+	if err != nil {
+		return err
+	}
+
+	if result.MatchedCount == 0 {
+		return ErrInvitationNotFound
+	}
+
+	return nil
 }
-func EditInvitation() {}
+
+func (s *InvitationService) GetInvitationByVoucherCode(c context.Context, VoucherCode string) (models.Invitation, error) {
+	filter := bson.M{"voucher_code": VoucherCode}
+
+	var invitation models.Invitation
+	err := s.collection.FindOne(c, filter).Decode(&invitation)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return models.Invitation{}, ErrInvitationNotFound
+		}
+		return models.Invitation{}, err
+	}
+
+	return invitation, nil
+}

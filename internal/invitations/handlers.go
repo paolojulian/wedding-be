@@ -102,3 +102,42 @@ func (s *Handler) UpdateInvitation(c *gin.Context) {
 
 	c.JSON(http.StatusOK, req)
 }
+
+func (h *Handler) RespondToInvitation(c *gin.Context) {
+	VoucherCode := c.Param("voucher_code")
+
+	var req RespondToInvitationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid Request"})
+		return
+	}
+
+	err := h.Service.RespondToInvitation(c, VoucherCode, req)
+	if err != nil {
+		switch err {
+		case ErrInvitationNotFound:
+			c.JSON(http.StatusNotFound, gin.H{"message": "Invitation Not Found"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Internal Server Error"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Responded!"})
+}
+
+func (h *Handler) GetInvitationForRespond(c *gin.Context) {
+	VoucherCode := c.Param("voucher_code")
+
+	invitation, err := h.Service.GetInvitationByVoucherCode(c, VoucherCode)
+	if err != nil {
+		switch err {
+		case ErrInvitationNotFound:
+			c.JSON(http.StatusNotFound, gin.H{"message": "Invitation not found"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
+		}
+	}
+
+	c.JSON(http.StatusOK, invitation)
+}
