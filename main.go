@@ -11,7 +11,6 @@ import (
 	"github.com/paolojulian/wedding-be/internal/firebase"
 	"github.com/paolojulian/wedding-be/internal/invitations"
 	"github.com/paolojulian/wedding-be/internal/models"
-	"github.com/paolojulian/wedding-be/internal/utils"
 	"github.com/paolojulian/wedding-be/pkg/db"
 )
 
@@ -63,15 +62,15 @@ func main() {
 	})
 
 	// Invitation endpoints
-	router.GET("/invitations", utils.AuthMiddleware(), invitationHandler.GetList)
+	router.GET("/invitations", auth.AuthMiddleware(), invitationHandler.GetList)
 	router.GET("/test/invitations", invitationHandler.GetList)
-	router.POST("/invitations", utils.AuthMiddleware(), invitationHandler.CreateInvitation)
-	router.PUT("/invitations/:id", utils.AuthMiddleware(), editInvitation)
-	router.DELETE("/invitations/:id", utils.AuthMiddleware(), invitationHandler.DeleteInvitation)
-	router.PUT("/invitations/respond/:voucherCode", utils.AuthMiddleware(), respondToInvitation)
+	router.POST("/invitations", auth.AuthMiddleware(), invitationHandler.CreateInvitation)
+	router.PUT("/invitations/:id", auth.AuthMiddleware(), editInvitation)
+	router.DELETE("/invitations/:id", auth.AuthMiddleware(), invitationHandler.DeleteInvitation)
+	router.PUT("/invitations/respond/:voucherCode", auth.AuthMiddleware(), respondToInvitation)
 
 	// Authentication endpoints
-	router.GET("/me", utils.AuthMiddleware(), authHandler.ValidateLoggedInUser)
+	router.GET("/me", auth.AuthMiddleware(), authHandler.ValidateLoggedInUser)
 	router.POST("/login", authHandler.Login)
 	router.POST("/logout", authHandler.Logout)
 

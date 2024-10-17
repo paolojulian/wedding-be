@@ -3,6 +3,7 @@ package auth
 import (
 	"net/http"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
 
@@ -50,4 +51,38 @@ func (h *Handler) Logout(c *gin.Context) {
 
 func (h *Handler) ValidateLoggedInUser(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "You are logged in"})
+}
+
+func AuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		cookie, err := c.Request.Cookie("auth_token")
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
+			c.Abort()
+			return
+
+		}
+
+		// Validate the JWT token in the cookie
+		tokenString := cookie.Value
+		claims := &jwt.MapClaims{}
+
+		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+			// Ensure that the token method used is HMAC
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, jwt.ErrSignatureInvalid
+			}
+			return jwtSecretKey, nil
+		})
+
+		if err != nil || !token.Valid {
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid or expired token"})
+			c.Abort()
+			return
+		}
+
+		// TODO: Validate cookie
+
+		c.Next()
+	}
 }
