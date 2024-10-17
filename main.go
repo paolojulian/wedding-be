@@ -65,8 +65,9 @@ func main() {
 	// Invitation endpoints
 	router.GET("/invitations", utils.AuthMiddleware(), invitationHandler.GetList)
 	router.GET("/test/invitations", invitationHandler.GetList)
-	router.POST("/invitations", utils.AuthMiddleware(), invitations.CreateInvitation)
+	router.POST("/invitations", utils.AuthMiddleware(), invitationHandler.CreateInvitation)
 	router.PUT("/invitations/:id", utils.AuthMiddleware(), editInvitation)
+	router.DELETE("/invitations/:id", utils.AuthMiddleware(), invitationHandler.DeleteInvitation)
 	router.PUT("/invitations/respond/:voucherCode", utils.AuthMiddleware(), respondToInvitation)
 
 	// Authentication endpoints

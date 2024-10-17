@@ -65,17 +65,9 @@ func (h *Handler) CreateInvitation(c *gin.Context) {
 }
 
 func (h *Handler) DeleteInvitation(c *gin.Context) {
-	type DeleteInvitationRequest struct {
-		ID string `json:"id"`
-	}
+	ID := c.Param("id")
 
-	var req DeleteInvitationRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request"})
-		return
-	}
-
-	err := h.Service.DeleteInvitation(c, req.ID)
+	err := h.Service.DeleteInvitation(c, ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong, please try again later"})
 		return
