@@ -50,6 +50,7 @@ func (h *Handler) Logout(c *gin.Context) {
 }
 
 func (h *Handler) ValidateLoggedInUser(c *gin.Context) {
+	// The auth middleware has already validated it, so we don't need to add extra functions here
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "You are logged in"})
 }
 

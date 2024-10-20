@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/paolojulian/wedding-be/internal/models"
+	"github.com/paolojulian/wedding-be/pkg/db"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -12,9 +13,9 @@ type AuthService struct {
 	collection *mongo.Collection
 }
 
-func NewAuthService(db *mongo.Database) *AuthService {
+func NewAuthService(mongoDB *mongo.Database) *AuthService {
 	return &AuthService{
-		collection: db.Collection("users"),
+		collection: mongoDB.Collection(db.UsersCollection),
 	}
 }
 

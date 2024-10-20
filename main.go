@@ -18,9 +18,9 @@ func main() {
 	defer db.DisconnectMongoDB()
 
 	// Initialize the services
-	authService := auth.NewAuthService(client.Database("wedding_db"))
+	authService := auth.NewAuthService(client.Database(db.DatabaseName))
 	authHandler := auth.NewHandler(authService)
-	invitationService := invitations.NewInvitationService(client.Database("wedding_db"))
+	invitationService := invitations.NewInvitationService(client.Database(db.DatabaseName))
 	invitationHandler := invitations.NewHandler(invitationService)
 
 	firebase.InitFirebase()

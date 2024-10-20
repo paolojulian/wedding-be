@@ -10,7 +10,14 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var client *mongo.Client
+var (
+	client *mongo.Client
+
+	DatabaseName = "wedding_db"
+	// Collection names
+	InvitationsCollection = "invitations"
+	UsersCollection       = "users"
+)
 
 func ConnectMongoDB() *mongo.Client {
 	// If there is a client initialized, return it

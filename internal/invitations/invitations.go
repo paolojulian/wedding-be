@@ -7,6 +7,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+
+	"github.com/paolojulian/wedding-be/pkg/db"
 )
 
 type UpdateInvitationRequest struct {
@@ -27,9 +29,9 @@ type InvitationService struct {
 	collection *mongo.Collection
 }
 
-func NewInvitationService(db *mongo.Database) *InvitationService {
+func NewInvitationService(mongoDB *mongo.Database) *InvitationService {
 	return &InvitationService{
-		collection: db.Collection("invitations"),
+		collection: mongoDB.Collection(db.InvitationsCollection),
 	}
 }
 
