@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 
+	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -25,14 +27,24 @@ func ConnectMongoDB() *mongo.Client {
 		return client
 	}
 
-	fmt.Println("Connecting to MongoDB Atlas...")
-
 	// If not, create one
 
-	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
-	opts := options.Client().ApplyURI("mongodb+srv://ocaysanity:2imsx3QdCp5uCcDm@weddingcluster.btbm6.mongodb.net/?retryWrites=true&w=majority&appName=WeddingCluster").SetServerAPIOptions(serverAPI)
+	fmt.Println("Connecting to MongoDB Atlas...")
 
-	var err error
+	// Load .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
+	// Get MongoDB URI from environment variable
+	mongoURI := os.Getenv("MONGODB_URI")
+	if mongoURI == "" {
+		log.Fatal("MONGODB_URI environment variable not set")
+	}
+
+	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
+	opts := options.Client().ApplyURI(mongoURI).SetServerAPIOptions(serverAPI)
+
 	client, err = mongo.Connect(context.TODO(), opts)
 	if err != nil {
 		log.Fatal("Error connecting to MongoDB: ", err)
