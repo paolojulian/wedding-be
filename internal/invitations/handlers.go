@@ -1,6 +1,7 @@
 package invitations
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -31,12 +32,13 @@ func (h *Handler) CreateInvitation(c *gin.Context) {
 	type CreateInvitationRequest struct {
 		Name          string `json:"name" binding:"required"`
 		VoucherCode   string `json:"voucher_code,omitempty" binding:"required"`
-		GuestsAllowed int    `json:"guests_allowed,omitempty" binding:"required"`
+		GuestsAllowed int    `json:"guests_allowed,omitempty"`
 	}
 
 	// Parse request body
 	var req CreateInvitationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Printf("Error %v", err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Invalid request"})
 		return
 	}
@@ -93,7 +95,7 @@ func (s *Handler) UpdateInvitation(c *gin.Context) {
 		case ErrInvalidIDFormat:
 			c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid ID"})
 		case ErrNoFieldsToUpdate:
-			c.JSON(http.StatusOK, req)
+			c.JSON(http.StatusBadRequest, gin.H{"message": "No fields to update"})
 		default:
 			c.JSON(http.StatusInternalServerError, gin.H{"message": "Unable to update the invitation"})
 		}

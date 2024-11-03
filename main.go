@@ -28,7 +28,10 @@ func main() {
 
 	// Allow CORS from localhost
 	router.Use(func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
+		origin := c.Request.Header.Get("Origin")
+		if origin == "http://localhost:5173" || origin == "http://localhost:3000" {
+			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+		}
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, X-Requested-With")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
@@ -39,14 +42,16 @@ func main() {
 		c.Next()
 	})
 
-	// Invitation endpoints
+	// Protected endpoints
 	router.GET("/invitations", auth.AuthMiddleware(), invitationHandler.GetList)
 	router.GET("/test/invitations", invitationHandler.GetList)
 	router.POST("/invitations", auth.AuthMiddleware(), invitationHandler.CreateInvitation)
 	router.PUT("/invitations/:id", auth.AuthMiddleware(), invitationHandler.UpdateInvitation)
 	router.DELETE("/invitations/:id", auth.AuthMiddleware(), invitationHandler.DeleteInvitation)
-	router.PUT("/invitations/respond/:voucher_code", auth.AuthMiddleware(), invitationHandler.RespondToInvitation)
-	router.GET("/invitations/respond/:voucher_code", auth.AuthMiddleware(), invitationHandler.GetInvitationForRespond)
+
+	// Public endpoints
+	router.PUT("/invitations/respond/:voucher_code", invitationHandler.RespondToInvitation)
+	router.GET("/invitations/respond/:voucher_code", invitationHandler.GetInvitationForRespond)
 
 	// Authentication endpoints
 	router.GET("/me", auth.AuthMiddleware(), authHandler.ValidateLoggedInUser)

@@ -2,6 +2,7 @@ package invitations
 
 import (
 	"context"
+	"log"
 
 	"github.com/paolojulian/wedding-be/internal/models"
 	"go.mongodb.org/mongo-driver/bson"
@@ -120,6 +121,9 @@ func (s *InvitationService) UpdateInvitation(c context.Context, ID string, invit
 	if invitation.GuestsToBring != nil {
 		updateDoc["guests_to_bring"] = invitation.GuestsToBring
 	}
+
+	log.Printf("Invitation received %v", invitation)
+	log.Printf("UpdateDoc %v", updateDoc)
 
 	if len(updateDoc) == 0 {
 		return ErrNoFieldsToUpdate
