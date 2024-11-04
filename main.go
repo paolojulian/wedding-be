@@ -1,7 +1,11 @@
 package main
 
 import (
+	"log"
+	"os"
+
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 
 	// Internals
 
@@ -26,10 +30,25 @@ func main() {
 	firebase.InitFirebase()
 	firebase.InitFirestore()
 
+	// Load .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
+	// Get URIs from environment variable
+	appURI := os.Getenv("APP_URI")
+	if appURI == "" {
+		log.Fatal("APP_URI environment variable not set")
+	}
+	adminURI := os.Getenv("ADMIN_URI")
+	if adminURI == "" {
+		log.Fatal("ADMIN_URI environment variable not set")
+	}
+
 	// Allow CORS from localhost
 	router.Use(func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
-		if origin == "http://localhost:5173" || origin == "http://localhost:3000" {
+		if origin == adminURI || origin == appURI {
 			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
 		}
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
