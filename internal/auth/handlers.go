@@ -44,8 +44,7 @@ func (h *Handler) Login(c *gin.Context) {
 }
 
 func (h *Handler) Logout(c *gin.Context) {
-	// Clear the auth token cookie
-	c.SetCookie(authCookieName, "", -1, "/", "", false, true)
+	clearCookieHandler(c.Writer)
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
 }
 

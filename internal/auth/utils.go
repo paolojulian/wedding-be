@@ -13,10 +13,23 @@ func setCookieHandler(w http.ResponseWriter, cookieValue string) {
 		Name:     authCookieName,
 		Value:    cookieValue,
 		Path:     "/",
-		MaxAge:   3600,
+		MaxAge:   int(tokenExpiryDuration.Seconds()),
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
+		SameSite: http.SameSiteNoneMode,
+	}
+	http.SetCookie(w, &cookie)
+}
+
+func clearCookieHandler(w http.ResponseWriter) {
+	cookie := http.Cookie{
+		Name:     authCookieName,
+		Value:    "", // Clear the cookie value
+		Path:     "/",
+		MaxAge:   -1, // Set MaxAge to -1 to delete the cookie
+		HttpOnly: true,
+		Secure:   true,                  // Set to true to enforce HTTPS
+		SameSite: http.SameSiteNoneMode, // Ensure SameSite is consistent
 	}
 	http.SetCookie(w, &cookie)
 }

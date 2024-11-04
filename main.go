@@ -1,14 +1,11 @@
 package main
 
 import (
-	"log"
-	"os"
-
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 
 	// Internals
 
+	"github.com/paolojulian/wedding-be/config"
 	"github.com/paolojulian/wedding-be/internal/auth"
 	"github.com/paolojulian/wedding-be/internal/firebase"
 	"github.com/paolojulian/wedding-be/internal/invitations"
@@ -30,20 +27,9 @@ func main() {
 	firebase.InitFirebase()
 	firebase.InitFirestore()
 
-	// Load .env file
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file")
-	}
 	// Get URIs from environment variable
-	appURI := os.Getenv("APP_URI")
-	if appURI == "" {
-		log.Fatal("APP_URI environment variable not set")
-	}
-	adminURI := os.Getenv("ADMIN_URI")
-	if adminURI == "" {
-		log.Fatal("ADMIN_URI environment variable not set")
-	}
+	appURI := config.GetAppURI()
+	adminURI := config.GetAdminURI()
 
 	// Allow CORS from localhost
 	router.Use(func(c *gin.Context) {
