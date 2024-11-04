@@ -63,7 +63,6 @@ func main() {
 
 	// Protected endpoints
 	router.GET("/invitations", auth.AuthMiddleware(), invitationHandler.GetList)
-	router.GET("/test/invitations", invitationHandler.GetList)
 	router.POST("/invitations", auth.AuthMiddleware(), invitationHandler.CreateInvitation)
 	router.PUT("/invitations/:id", auth.AuthMiddleware(), invitationHandler.UpdateInvitation)
 	router.DELETE("/invitations/:id", auth.AuthMiddleware(), invitationHandler.DeleteInvitation)
