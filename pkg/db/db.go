@@ -15,7 +15,7 @@ import (
 var (
 	client *mongo.Client
 
-	DatabaseName = "wedding_db"
+	DatabaseName = "wedding_db_dev"
 	// Collection names
 	InvitationsCollection = "invitations"
 	UsersCollection       = "users"
@@ -40,6 +40,11 @@ func ConnectMongoDB() *mongo.Client {
 	mongoURI := os.Getenv("MONGODB_URI")
 	if mongoURI == "" {
 		log.Fatal("MONGODB_URI environment variable not set")
+	}
+
+	DatabaseName := os.Getenv("DB_NAME")
+	if DatabaseName == "" {
+		DatabaseName = "wedding_db_dev"
 	}
 
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)

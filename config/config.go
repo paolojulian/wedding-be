@@ -8,8 +8,9 @@ import (
 )
 
 var (
-	appURI   string
-	adminURI string
+	appURI       string
+	adminURI     string
+	cookieDomain string
 )
 
 func init() {
@@ -29,6 +30,12 @@ func init() {
 	if adminURI == "" {
 		log.Fatal("ADMIN_URI environment variable not set")
 	}
+
+	cookieDomain = os.Getenv("ADMIN_URI")
+	// Note that cookie domain can be ""
+	// if cookieDomain == "" {
+	// 	log.Fatal("COOKIE_DOMAIN environment variable not set")
+	// }
 }
 
 // GetAppURI returns the cached APP_URI environment variable
@@ -39,4 +46,8 @@ func GetAppURI() string {
 // GetAdminURI returns the cached ADMIN_URI environment variable
 func GetAdminURI() string {
 	return adminURI
+}
+
+func GetCookieDomain() string {
+	return cookieDomain
 }

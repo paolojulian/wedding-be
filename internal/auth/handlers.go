@@ -39,12 +39,12 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	setCookieHandler(c.Writer, token)
+	setCookieHandler(c, token)
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Logged in successfully"})
 }
 
 func (h *Handler) Logout(c *gin.Context) {
-	clearCookieHandler(c.Writer)
+	clearCookieHandler(c)
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
 }
 
