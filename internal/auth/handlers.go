@@ -39,12 +39,13 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	setCookieHandler(c, token)
-	c.IndentedJSON(http.StatusOK, gin.H{"message": "Logged in successfully"})
+	c.IndentedJSON(http.StatusOK, gin.H{
+		"message": "Login successfully.",
+		"token":   token,
+	})
 }
 
 func (h *Handler) Logout(c *gin.Context) {
-	clearCookieHandler(c)
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
 }
 
@@ -55,18 +56,27 @@ func (h *Handler) ValidateLoggedInUser(c *gin.Context) {
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		cookie, err := c.Request.Cookie("auth_token")
-		if err != nil {
+		// Extract the token from the Authorization header
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
 			c.Abort()
 			return
 
 		}
 
-		// Validate the JWT token in the cookie
-		tokenString := cookie.Value
-		claims := &jwt.MapClaims{}
+		// Extract the token (assuming format: "Bearer <token>")
+		tokenString := ""
+		if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
+			tokenString = authHeader[7:]
+		} else {
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized: Malformed token"})
+			c.Abort()
+			return
+		}
 
+		// Validate the JWT token
+		claims := &jwt.MapClaims{}
 		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 			// Ensure that the token method used is HMAC
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -81,8 +91,8 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// TODO: Validate cookie
-
+		// Set the claims in the context for use in downstream handlers
+		c.Set("claims", claims)
 		c.Next()
 	}
 }
