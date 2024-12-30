@@ -21,6 +21,21 @@ var (
 	UsersCollection       = "users"
 )
 
+func GetMongoURI() string {
+	// Load .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
+	// Get MongoDB URI from environment variable
+	mongoURI := os.Getenv("MONGODB_URI")
+	if mongoURI == "" {
+		log.Fatal("MONGODB_URI environment variable not set")
+	}
+
+	return mongoURI
+}
+
 func ConnectMongoDB() *mongo.Client {
 	// If there is a client initialized, return it
 	if client != nil {

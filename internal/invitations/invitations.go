@@ -65,6 +65,7 @@ func (s *InvitationService) CreateInvitation(c context.Context, invitation model
 	// Set default values
 	invitation.Status = "pending" // default status
 	invitation.Index = 1
+	invitation.GuestsToBring = 0
 
 	result, err := s.collection.InsertOne(c, invitation)
 	if err != nil {

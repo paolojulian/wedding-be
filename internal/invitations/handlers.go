@@ -48,7 +48,6 @@ func (h *Handler) CreateInvitation(c *gin.Context) {
 		Name:          req.Name,
 		VoucherCode:   req.VoucherCode,
 		GuestsAllowed: req.GuestsAllowed,
-		GuestsToBring: 0, // Initialize as 0
 	}
 
 	result, err := h.Service.CreateInvitation(c, invitation)
