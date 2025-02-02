@@ -56,6 +56,7 @@ func main() {
 	router.PUT("/invitations/:id", auth.AuthMiddleware(), invitationHandler.UpdateInvitation)
 	router.DELETE("/invitations/:id", auth.AuthMiddleware(), invitationHandler.DeleteInvitation)
 	router.GET("/invitation-message", auth.AuthMiddleware(), invitationHandler.GetInvitationMessage)
+	router.PUT("/invitation-message", auth.AuthMiddleware(), invitationHandler.UpdateInvitationMessage)
 
 	// Public endpoints
 	router.PUT("/invitations/respond/:voucher_code", invitationHandler.RespondToInvitation)

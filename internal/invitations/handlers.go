@@ -40,6 +40,22 @@ func (h *Handler) GetInvitationMessage(c *gin.Context) {
 	c.JSON(http.StatusOK, invitationMessage)
 }
 
+func (h *Handler) UpdateInvitationMessage(c *gin.Context) {
+	var req UpdateInvitationMessageRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request"})
+		return
+	}
+
+	err := h.InvitationMessageService.UpdateInvitationMessage(c, *req.Message)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong!"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Updated"})
+}
+
 func (h *Handler) CreateInvitation(c *gin.Context) {
 	type CreateInvitationRequest struct {
 		Name          string `json:"name" binding:"required"`
