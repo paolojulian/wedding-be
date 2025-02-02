@@ -17,8 +17,9 @@ var (
 
 	DatabaseName = "wedding_db"
 	// Collection names
-	InvitationsCollection = "invitations"
-	UsersCollection       = "users"
+	InvitationsCollection       = "invitations"
+	InvitationMessageCollection = "invitation_message"
+	UsersCollection             = "users"
 )
 
 func GetMongoURI() string {

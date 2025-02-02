@@ -21,7 +21,8 @@ func main() {
 	authService := auth.NewAuthService(client.Database(db.DatabaseName))
 	authHandler := auth.NewHandler(authService)
 	invitationService := invitations.NewInvitationService(client.Database(db.DatabaseName))
-	invitationHandler := invitations.NewHandler(invitationService)
+	invitationMessageService := invitations.NewInvitationMessageService(client.Database(db.DatabaseName))
+	invitationHandler := invitations.NewHandler(invitationService, invitationMessageService)
 
 	// Get URIs from environment variable
 	appURI := config.GetAppURI()
@@ -54,6 +55,7 @@ func main() {
 	router.POST("/invitations", auth.AuthMiddleware(), invitationHandler.CreateInvitation)
 	router.PUT("/invitations/:id", auth.AuthMiddleware(), invitationHandler.UpdateInvitation)
 	router.DELETE("/invitations/:id", auth.AuthMiddleware(), invitationHandler.DeleteInvitation)
+	router.GET("/invitation-message", auth.AuthMiddleware(), invitationHandler.GetInvitationMessage)
 
 	// Public endpoints
 	router.PUT("/invitations/respond/:voucher_code", invitationHandler.RespondToInvitation)

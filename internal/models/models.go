@@ -23,3 +23,8 @@ type User struct {
 	Username string `json:"username"`
 	Password string `json:"-" bson:"password"` // Exclude password from JSON responses
 }
+
+type InvitationMessage struct {
+	ID      string `json:"id" bson:"_id,omitempty"` // ObjectID stored as a string
+	Message string `json:"message" bson:"message"`
+}

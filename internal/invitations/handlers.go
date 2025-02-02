@@ -9,12 +9,14 @@ import (
 )
 
 type Handler struct {
-	Service *InvitationService
+	Service                  *InvitationService
+	InvitationMessageService *InvitationMessageService
 }
 
-func NewHandler(service *InvitationService) *Handler {
+func NewHandler(service *InvitationService, invitationMessageService *InvitationMessageService) *Handler {
 	return &Handler{
-		Service: service,
+		Service:                  service,
+		InvitationMessageService: invitationMessageService,
 	}
 }
 
@@ -26,6 +28,16 @@ func (h *Handler) GetList(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, invitations)
+}
+
+func (h *Handler) GetInvitationMessage(c *gin.Context) {
+	invitationMessage, err := h.InvitationMessageService.GetInvitationMessage(c)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": "Internal server error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, invitationMessage)
 }
 
 func (h *Handler) CreateInvitation(c *gin.Context) {
