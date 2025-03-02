@@ -146,6 +146,8 @@ func (h *Handler) RespondToInvitation(c *gin.Context) {
 		switch err {
 		case ErrInvitationNotFound:
 			c.JSON(http.StatusNotFound, gin.H{"message": "Invitation Not Found"})
+		case ErrIsAlreadyLocked:
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Responding to invitations is already locked."})
 		default:
 			c.JSON(http.StatusInternalServerError, gin.H{"message": "Internal Server Error"})
 		}

@@ -12,4 +12,6 @@ var (
 	ErrInvitationMessageNotFound = errors.New("invitation message is not found")
 
 	ErrCannotUpdateInDB = errors.New("cannot update database")
+
+	ErrIsAlreadyLocked = errors.New("the app is already locked")
 )

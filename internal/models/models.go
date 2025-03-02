@@ -28,3 +28,9 @@ type InvitationMessage struct {
 	ID      string `json:"id" bson:"_id,omitempty"` // ObjectID stored as a string
 	Message string `json:"message" bson:"message"`
 }
+
+type Config struct {
+	ID    string `json:"id" bson:"_id,omitempty"`
+	Name  string `json:name`
+	Value string `json:string`
+}

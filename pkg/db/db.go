@@ -17,6 +17,7 @@ var (
 
 	DatabaseName = "wedding_db"
 	// Collection names
+	ConfigCollection            = "config"
 	InvitationsCollection       = "invitations"
 	InvitationMessageCollection = "invitation_message"
 	UsersCollection             = "users"

@@ -3,6 +3,7 @@ package invitations
 import (
 	"context"
 
+	app_config "github.com/paolojulian/wedding-be/internal/config"
 	"github.com/paolojulian/wedding-be/internal/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -26,12 +27,14 @@ type RespondToInvitationRequest struct {
 }
 
 type InvitationService struct {
-	collection *mongo.Collection
+	collection       *mongo.Collection
+	appConfigService *app_config.AppConfigService
 }
 
 func NewInvitationService(mongoDB *mongo.Database) *InvitationService {
 	return &InvitationService{
-		collection: mongoDB.Collection(db.InvitationsCollection),
+		collection:       mongoDB.Collection(db.InvitationsCollection),
+		appConfigService: app_config.NewAppConfigService(mongoDB),
 	}
 }
 
@@ -139,6 +142,15 @@ func (s *InvitationService) UpdateInvitation(c context.Context, ID string, invit
 }
 
 func (s *InvitationService) RespondToInvitation(c context.Context, VoucherCode string, respondReq RespondToInvitationRequest) error {
+	isLocked, err := s.appConfigService.GetIsLocked(c)
+	if err != nil {
+		return err
+	}
+
+	if isLocked {
+		return ErrIsAlreadyLocked
+	}
+
 	filter := bson.M{"voucher_code": VoucherCode}
 	updateDoc := bson.M{
 		"status":          respondReq.Status,
